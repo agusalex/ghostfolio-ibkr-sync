@@ -16,6 +16,8 @@ Sync your Ghostfolio with IBKR
 * Account Information: Currency
 * Cash Report: Currency, Ending Cash
 * Trades: Select All (however there is a risk new IBKR fields will cause issues)
+For dividends, also include:
+* Change in Dividend Accruals: Quantity, Gross Rate, Action ID, Currency, Symbol, ISIN, FIGI, Date, Fee, Code
 
 Follow this guide to configure your Flex Queries in your Interactive Brokers account:
 [https://portfellow.com/how-to-configure-ib-import](https://portfellow.com/how-to-configure-ib-import)

@@ -1,11 +1,11 @@
 import json
 import re
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 
 import requests
 import yaml
-from ibflex import client, parser, FlexQueryResponse, BuySell, FlexStatement, Trade
+from ibflex import enums, client, parser, FlexQueryResponse, BuySell, FlexStatement, Trade, ChangeInDividendAccrual
 
 # Create logger
 import logging
@@ -192,13 +192,36 @@ class SyncIBKR:
                     "ibkrSymbol": self.symbol_mapping[trade.symbol] if trade.symbol in self.symbol_mapping else trade.symbol
                 })
 
+        for dividend in account_statement.ChangeInDividendAccruals:
+            if len(dividend.code) != 1:
+                logging.warning("Incorrect code in dividend %r", dividend)
+                continue
+            # Reverse dividend is actual cash payment.
+            if dividend.code != (enums.Code.REVERSE, ):
+                continue
+            iso_format = dividend.date.isoformat()
+            symbol = self.get_symbol_for_trade(dividend, data_source)
+            activities.append({
+                "accountId": account_id,
+                "comment": f"tradeID={dividend.actionID}",
+                "currency": dividend.currency,
+                "dataSource": data_source,
+                "date": iso_format,
+                "fee": 0.0,
+                "quantity": float(dividend.quantity),
+                "symbol": symbol.replace(" ", "-"),
+                "type": "DIVIDEND",
+                "unitPrice": float(dividend.grossRate),
+                "figi": dividend.figi,
+                "ibkrSymbol": self.symbol_mapping[dividend.symbol] if dividend.symbol in self.symbol_mapping else dividend.symbol
+            })
         diff = get_diff(self.get_all_acts_for_account(), activities)
         if len(diff) == 0:
             logger.info("Nothing new to sync")
         else:
             self.import_act(diff)
 
-    def get_symbol_for_trade(self, trade: Trade, data_source: str):
+    def get_symbol_for_trade(self, trade: Union[Trade, ChangeInDividendAccrual], data_source: str):
         symbol = trade.symbol
         if data_source == "YAHOO":
             if trade.isin is not None and len(trade.isin) > 0:
