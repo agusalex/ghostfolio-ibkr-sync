@@ -177,6 +177,9 @@ class SyncIBKR:
                     logger.info("trade is not buy or sell (ignoring): %s", trade)
                     continue
 
+                if trade.assetCategory == enums.AssetClass.OPTION:
+                    continue
+
                 activities.append({
                     "accountId": account_id,
                     "comment": f"tradeID={trade.tradeID}",
