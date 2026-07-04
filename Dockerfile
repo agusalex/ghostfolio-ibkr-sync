@@ -1,5 +1,5 @@
 #Deriving the latest base image
-FROM python:3.9.16-alpine3.17
+FROM python:3.12-alpine
 
 RUN apk add git
 
